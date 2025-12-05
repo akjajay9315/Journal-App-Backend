@@ -78,8 +78,8 @@ public class JournalEntryController {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String username = authentication.getName();
             User user = userService.getEntryByUsername(username);
-            JournalEntry old = user.getJournalEntries().stream()
-                    .filter(x -> x.getId() != null && x.getId().equals(myId.toHexString()))
+                JournalEntry old = user.getJournalEntries().stream()
+                    .filter(x -> x.getId() != null && x.getId().equals(myId))
                     .findFirst()
                     .orElse(null);
             

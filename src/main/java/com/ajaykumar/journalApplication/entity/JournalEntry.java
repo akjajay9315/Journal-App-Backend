@@ -1,6 +1,8 @@
 package com.ajaykumar.journalApplication.entity;
 
 import com.ajaykumar.journalApplication.enums.Sentiment;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
@@ -14,6 +16,7 @@ import java.time.LocalDateTime;
 public class JournalEntry {
 
     @Id
+    @JsonIgnore
     private ObjectId id;
     @NonNull
     private String title;
@@ -21,7 +24,8 @@ public class JournalEntry {
     private LocalDateTime date;
     private Sentiment sentiment;
 
-    public String getId() {
+    @JsonProperty("id")
+    public String getIdHex() {
         return id != null ? id.toHexString() : null;
     }
 }
