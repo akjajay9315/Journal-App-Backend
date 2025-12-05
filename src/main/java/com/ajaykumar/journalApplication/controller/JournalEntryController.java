@@ -2,6 +2,7 @@ package com.ajaykumar.journalApplication.controller;
 
 import com.ajaykumar.journalApplication.entity.JournalEntry;
 import com.ajaykumar.journalApplication.entity.User;
+import com.ajaykumar.journalApplication.repository.JournalEntryRepository;
 import com.ajaykumar.journalApplication.service.JournalEntryService;
 import com.ajaykumar.journalApplication.service.UserService;
 import org.bson.types.ObjectId;
@@ -24,6 +25,9 @@ public class JournalEntryController {
 
     @Autowired
     public UserService userService;
+
+    @Autowired
+    public JournalEntryRepository journalEntryRepository;
 
 
     @GetMapping
@@ -70,16 +74,26 @@ public class JournalEntryController {
 
     @PutMapping("id/{myId}")
     public ResponseEntity<JournalEntry> updateJournalById(@PathVariable ObjectId myId, @RequestBody JournalEntry journalEntry) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
-        User user = userService.getEntryByUsername(username);
-        JournalEntry old = user.getJournalEntries().stream().filter(x -> x.getId().equals(myId)).toList().get(0);
-        if(old != null) {
-            old.setTitle(journalEntry.getTitle() != null && !journalEntry.getTitle().isEmpty() ? journalEntry.getTitle() : old.getTitle());
-            old.setContent(journalEntry.getContent() != null && !journalEntry.getContent().isEmpty() ? journalEntry.getContent() : old.getContent());
-            journalEntryService.saveEntry(old);
-            return new ResponseEntity<>(old, HttpStatus.OK);
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+            User user = userService.getEntryByUsername(username);
+            JournalEntry old = user.getJournalEntries().stream()
+                    .filter(x -> x.getId() != null && x.getId().equals(myId.toHexString()))
+                    .findFirst()
+                    .orElse(null);
+            
+            if(old != null) {
+                old.setTitle(journalEntry.getTitle() != null && !journalEntry.getTitle().isEmpty() ? journalEntry.getTitle() : old.getTitle());
+                old.setContent(journalEntry.getContent() != null && !journalEntry.getContent().isEmpty() ? journalEntry.getContent() : old.getContent());
+                journalEntryRepository.save(old);
+                userService.saveUser(user);
+                return new ResponseEntity<>(old, HttpStatus.OK);
+            }
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            System.out.println(e);
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 }
